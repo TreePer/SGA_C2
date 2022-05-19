@@ -67,17 +67,6 @@ int main(void) {
 				OnDrawText(BackGround[i].Info.Texture, BackGround[i].TransInfo.Position.x, BackGround[i].TransInfo.Position.y, BackGround[i].Info.Color);
 			}
 
-			if (GetAsyncKeyState(VK_UP))
-				Player->TransInfo.Position.y -= 1;
-
-			if (GetAsyncKeyState(VK_DOWN))
-				Player->TransInfo.Position.y += 1;
-
-			if (GetAsyncKeyState(VK_LEFT))
-				Player->TransInfo.Position.x -= 2;
-
-			if (GetAsyncKeyState(VK_RIGHT))
-				Player->TransInfo.Position.x += 2;
 
 			if (GetAsyncKeyState(VK_SPACE)) {
 				for (int i = 0; i < 128; ++i) {
@@ -90,6 +79,8 @@ int main(void) {
 				
 			}
 
+			UpdateInput(Player);
+
 			Collision(Player, Enemy);
 			Output(Player);
 			Output(Enemy);
@@ -98,6 +89,13 @@ int main(void) {
 			for (int i = 0; i < 128; ++i) {
 				if (Bullet[i] != nullptr && Bullet[i]->TransInfo.Position.x < 148)
 					OnDrawText(Bullet[i]->Info.Texture, Bullet[i]->TransInfo.Position.x++, Bullet[i]->TransInfo.Position.y);
+
+				if (Bullet[i] != nullptr && BulletHit(Enemy, Bullet[i])) {
+					delete Bullet[i];
+					Bullet[i] = nullptr;
+					BulletCount--;
+					OnDrawText((char*)"HIT!!", 5, 3);
+				}
 
 				if (Bullet[i] != nullptr && Bullet[i]->TransInfo.Position.x >= 148) {
 					delete Bullet[i];

@@ -10,6 +10,8 @@ void HideCursor(bool _visible);
 void Output(Object* _Obj);
 void Collision(Object* _Player, Object* _block);
 Object* Createbullet(const int x, const int y);
+void UpdateInput(Object* _Obj);
+bool BulletHit(Object* _Enemy, Object* _Bullet);
 
 void init(Object* _Obj, char* name, int px, int py, int pz) {
 	_Obj->Info.Texture = (name == nullptr ? SetName() : name);
@@ -94,4 +96,26 @@ Object* Createbullet(const int x, const int y) {
 	init(pBullet, (char*)"==o", x + 2, y);
 
 	return pBullet;
+}
+
+void UpdateInput(Object* _Obj) {
+
+	if (GetAsyncKeyState(VK_UP))
+		_Obj->TransInfo.Position.y -= 1;
+
+	if (GetAsyncKeyState(VK_DOWN))
+		_Obj->TransInfo.Position.y += 1;
+
+	if (GetAsyncKeyState(VK_LEFT))
+		_Obj->TransInfo.Position.x -= 2;
+
+	if (GetAsyncKeyState(VK_RIGHT))
+		_Obj->TransInfo.Position.x += 2;
+}
+
+bool BulletHit(Object* _Enemy, Object* _Bullet) {
+	if (_Bullet->TransInfo.Position.x + 3 > _Enemy->TransInfo.Position.x && _Bullet->TransInfo.Position.y == _Enemy->TransInfo.Position.y) {
+		return true;
+	}
+	return false;
 }
