@@ -1,12 +1,12 @@
 #pragma once
 
 struct Vector {
-	int x = 0, y = 0, z = 0;
+	float x = 0, y = 0, z = 0;
 
 	Vector() {};
 
-	Vector(int _x, int _y) : x(_x), y(_y) {};
-	Vector(int _x, int _y, int _z) : x(_x), y(_y), z(_z) {};
+	Vector(float _x, float _y) : x(_x), y(_y) {};
+	Vector(float _x, float _y, float _z) : x(_x), y(_y), z(_z) {};
 };
 
 struct TransForm {

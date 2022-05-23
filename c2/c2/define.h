@@ -1,32 +1,33 @@
-#pragma once
+ï»¿#pragma once
 
-void init(Object* _Obj, char* name = nullptr, int px = 0, int py = 0, int pz = 0);
+void init(Object* _Obj, char* name = nullptr, float px = 0, float py = 0, float pz = 0);
 char* SetName();
-void SetCursorPosition(int _x, int _y);
+void SetCursorPosition(float _x, float _y);
 void SetTextColor(int color);
-void OnDrawText(char* _str, int _x, int _y, int color = 15);
-void OnDrawText(int value, int _x, int _y, int color = 15);
+void OnDrawText(char* _str, float _x, float _y, int color = 15);
+void OnDrawText(int value, float _x, float _y, int color = 15);
 void HideCursor(bool _visible);
 void Output(Object* _Obj);
-void Collision(Object* _Player, Object* _block);
-Object* Createbullet(const int x, const int y);
+bool Collision(Object* _Player, Object* _block);
+Object* Createbullet(const float x, const float y);
 void UpdateInput(Object* _Obj);
-bool BulletHit(Object* _Enemy, Object* _Bullet);
+float GetDistance(Object* _Player, Object* _Temp);
+Vector GetDistanceV(Object* _Player, Object* _Temp);
 
-void init(Object* _Obj, char* name, int px, int py, int pz) {
+void init(Object* _Obj, char* name, float px, float py, float pz) {
 	_Obj->Info.Texture = (name == nullptr ? SetName() : name);
 
 	_Obj->Speed = 0;
 
 	_Obj->TransInfo.Position = Vector(px, py, pz);
 	_Obj->TransInfo.Rotation = Vector(0, 0, 0);
-	_Obj->TransInfo.Scale = Vector(strlen(_Obj->Info.Texture), 1, 0);
+	_Obj->TransInfo.Scale = Vector(strlen(_Obj->Info.Texture), 1.0f, 0);
 }
 
 char* SetName() {
 	char name1[128] = "";
 
-	cout << "ÀÌ¸§À» ÀÔ·ÂÇÏ½Ã¿À : ";
+	cout << "ì´ë¦„ì„ ìž…ë ¥í•˜ì‹œì˜¤ : ";
 	cin >> name1;
 
 	char* name = new char[strlen(name1) + 1];
@@ -36,7 +37,7 @@ char* SetName() {
 	return name;
 }
 
-void SetCursorPosition(int _x, int _y) {
+void SetCursorPosition(float _x, float _y) {
 	COORD Pos = { (short)_x, (short)_y };
 
 	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Pos);
@@ -48,13 +49,13 @@ void SetTextColor(int color) {
 
 }
 
-void OnDrawText(char* _str, int _x, int _y, int color) {
+void OnDrawText(char* _str, float _x, float _y, int color) {
 	SetCursorPosition(_x, _y);
 	SetTextColor(color);
 	cout << _str;
 }
 
-void OnDrawText(int value, int _x, int _y, int color) {
+void OnDrawText(int value, float _x, float _y, int color) {
 	SetCursorPosition(_x, _y);
 	SetTextColor(color);
 
@@ -82,18 +83,36 @@ void Output(Object* _Obj) {
 	}
 }
 
-void Collision(Object* _Player, Object* _block) {
-	if (_Player->TransInfo.Position.x + _Player->TransInfo.Scale.x > _block->TransInfo.Position.x &&
-		_Player->TransInfo.Position.x < _block->TransInfo.Position.x + _block->TransInfo.Scale.x &&
+bool Collision(Object* _Player, Object* _block) {
+	if (_Player->TransInfo.Position.x + _Player->TransInfo.Scale.x >= _block->TransInfo.Position.x &&
+		_Player->TransInfo.Position.x <= _block->TransInfo.Position.x + _block->TransInfo.Scale.x &&
 		_Player->TransInfo.Position.y == _block->TransInfo.Position.y) {
-		OnDrawText((char*)"Ãæµ¹", 30, 2);
+		return true;
 	}
+	return false;
 }
 
-Object* Createbullet(const int x, const int y) {
+Object* Createbullet(const float x, const float y, const int speed) {
 	Object* pBullet = new Object;
 
 	init(pBullet, (char*)"==o", x + 2, y);
+	pBullet->Speed = speed;
+
+	return pBullet;
+}
+
+Object* CreateEnemy(const float x, const float y) {
+	Object* pEnemy = new Object;
+
+	init(pEnemy, (char*)"í›—", x, y);
+
+	return pEnemy;
+}
+
+Object* CreateEnemybullet(const float x, const float y) {
+	Object* pBullet = new Object;
+
+	init(pBullet, (char*)"o==", x - 2, y);
 
 	return pBullet;
 }
@@ -113,9 +132,17 @@ void UpdateInput(Object* _Obj) {
 		_Obj->TransInfo.Position.x += 2;
 }
 
-bool BulletHit(Object* _Enemy, Object* _Bullet) {
-	if (_Bullet->TransInfo.Position.x + 3 > _Enemy->TransInfo.Position.x && _Bullet->TransInfo.Position.y == _Enemy->TransInfo.Position.y) {
-		return true;
-	}
-	return false;
+float GetDistance(Object* _Player, Object* _Temp) {
+	float x = _Player->TransInfo.Position.x - _Temp->TransInfo.Position.x;
+	float y = _Player->TransInfo.Position.y - _Temp->TransInfo.Position.y;
+
+	return sqrt((x * x) + (y * y));
+}
+
+Vector GetDistanceV(Object* _Player, Object* _Temp) {
+	float x = _Player->TransInfo.Position.x - _Temp->TransInfo.Position.x;
+	float y = _Player->TransInfo.Position.y - _Temp->TransInfo.Position.y;
+	float z = sqrt((x * x) + (y * y));
+
+	return Vector(x / z, y / z);
 }
