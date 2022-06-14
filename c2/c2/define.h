@@ -1,148 +1,344 @@
-ï»¿#pragma once
+#pragma once
 
-void init(Object* _Obj, char* name = nullptr, float px = 0, float py = 0, float pz = 0);
-char* SetName();
-void SetCursorPosition(float _x, float _y);
-void SetTextColor(int color);
-void OnDrawText(char* _str, float _x, float _y, int color = 15);
-void OnDrawText(int value, float _x, float _y, int color = 15);
-void HideCursor(bool _visible);
-void Output(Object* _Obj);
+static int g_nScreenIndex;
+static HANDLE g_hScreen[2];
+static unsigned int MapPosition = 0;
+int score = 0;
+bool jump = true;
+bool drop = true;
+bool gameover = false;
+bool jump2 = true;
+
+
+void ScreenInit();
+void ScreenFlipping();
+void ScreenClear();
+void ScreenRelease();
+void ScreenPrint(int x, int y, char* string);
+char* SplitMap(char* _map);
+
+void Logo();
+void Gameclear();
+void Gameover(Object* _Player, LONGLONG* time);
+
+void init(Object* _Obj, char* texture = nullptr, float px = 0, float py = 0, float pz = 0);
 bool Collision(Object* _Player, Object* _block);
 Object* Createbullet(const float x, const float y);
-void UpdateInput(Object* _Obj);
-float GetDistance(Object* _Player, Object* _Temp);
-Vector GetDistanceV(Object* _Player, Object* _Temp);
+Object* CreateEnemy(const float x, const float y);
+Object* CreateEnemybullet(const float x, const float y);
+void UpdateInput(Object* _Obj, char map[]);
 
-void init(Object* _Obj, char* name, float px, float py, float pz) {
-	_Obj->Info.Texture = (name == nullptr ? SetName() : name);
 
-	_Obj->Speed = 0;
+void ScreenInit() {
+    CONSOLE_CURSOR_INFO cci;
 
-	_Obj->TransInfo.Position = Vector(px, py, pz);
-	_Obj->TransInfo.Rotation = Vector(0, 0, 0);
-	_Obj->TransInfo.Scale = Vector(strlen(_Obj->Info.Texture), 1.0f, 0);
+
+    g_hScreen[0] = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+    g_hScreen[1] = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, NULL, CONSOLE_TEXTMODE_BUFFER, NULL);
+
+    cci.dwSize = 1;
+    cci.bVisible = FALSE;
+    SetConsoleCursorInfo(g_hScreen[0], &cci);
+    SetConsoleCursorInfo(g_hScreen[1], &cci);
 }
 
-char* SetName() {
-	char name1[128] = "";
-
-	cout << "ì´ë¦„ì„ ìž…ë ¥í•˜ì‹œì˜¤ : ";
-	cin >> name1;
-
-	char* name = new char[strlen(name1) + 1];
-
-	strcpy(name, name1);
-
-	return name;
+void ScreenFlipping() {
+    SetConsoleActiveScreenBuffer(g_hScreen[g_nScreenIndex]);
+    g_nScreenIndex = !g_nScreenIndex;
 }
 
-void SetCursorPosition(float _x, float _y) {
-	COORD Pos = { (short)_x, (short)_y };
-
-	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), Pos);
+void ScreenClear() {
+    COORD Coor = { 0, 0 };
+    DWORD dw;
+    FillConsoleOutputCharacter(g_hScreen[g_nScreenIndex], ' ', 150 * 35, Coor, &dw);
 }
 
-void SetTextColor(int color) {
+void ScreenRelease() {
+    CloseHandle(g_hScreen[0]);
+    CloseHandle(g_hScreen[1]);
+}
 
-	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), color);
+void ScreenPrint(int x, int y, char* string) {
+    DWORD dw;
+    COORD CursorPosition = { x, y };
+    SetConsoleCursorPosition(g_hScreen[g_nScreenIndex], CursorPosition);
+    WriteFile(g_hScreen[g_nScreenIndex], string, strlen(string), &dw, NULL);
+}
+
+char* SplitMap(char* _map) {
+    char* map = strtok(_map, ",");
+
+    string m = "";
+    while (map != NULL) {
+        m += map;
+        map = strtok(NULL, ",");
+    }
+
+    map = new char[2048]();
+
+    copy(m.begin(), m.end(), map);
+
+    return map;
+}
+
+void Logo() {
+    int i = 0;
+    int x = 75 - (strlen(" #####  #     # ######  ####### ######     #     #    #    ######  ### ####### ") / 2);
+
+        
+    while (true) {
+        ScreenClear();
+
+        ScreenPrint(x, 3, (char*)" #####  #     # ######  ####### ######     #     #    #    ######  ### ####### ");
+        ScreenPrint(x, 4, (char*)"#     # #     # #     # #       #     #    ##   ##   # #   #     #  #  #     # ");
+        ScreenPrint(x, 5, (char*)"#       #     # #     # #       #     #    # # # #  #   #  #     #  #  #     # ");
+        ScreenPrint(x, 6, (char*)" #####  #     # ######  #####   ######     #  #  # #     # ######   #  #     # ");
+        ScreenPrint(x, 7, (char*)"      # #     # #       #       #   #      #     # ####### #   #    #  #     # ");
+        ScreenPrint(x, 8, (char*)"#     # #     # #       #       #    #     #     # #     # #    #   #  #     # ");
+        ScreenPrint(x, 9, (char*)" #####   #####  #       ####### #     #    #     # #     # #     # ### ####### ");
+
+
+        if (GetAsyncKeyState(VK_UP) & 0x0001) {
+
+            if (i == 1) {
+                i = 0;
+            }
+            else {
+                i = 1;
+            }
+        }
+        
+        
+        if (GetAsyncKeyState(VK_DOWN) & 0x0001) {
+            if (i == 1) {
+                i = 0;
+            }
+            else {
+                i = 1;
+            }
+        }
+        if (GetAsyncKeyState(VK_RETURN) && i == 0)
+            break;
+        if (GetAsyncKeyState(VK_RETURN) && i == 1)
+            exit(0);
+
+        switch (i) {
+        case 0:
+            ScreenPrint(75, 23, (char*)"Start ¡ç");
+            ScreenPrint(75, 24, (char*)"Exit           ");
+            break;
+        case 1:
+            ScreenPrint(75, 23, (char*)"Start           ");
+            ScreenPrint(75, 24, (char*)"Exit ¡ç");
+            break;
+        }
+        ScreenFlipping();
+    }
+}
+
+void Gameclear() {
+    int x = 75 - (strlen(" #####     #    #     # #######     #####  #       #######    #    ######  ") / 2);
+
+    char finalscore[64];
+    sprintf(finalscore, "Score : %d", score * 100);
+
+    int a = 75 - (strlen(finalscore) / 2);
+
+    while (true) {
+        ScreenClear();
+
+        ScreenPrint(x, 11, (char*)" #####     #    #     # #######     #####  #       #######    #    ######  ");
+        ScreenPrint(x, 12, (char*)"#     #   # #   ##   ## #          #     # #       #         # #   #     # ");
+        ScreenPrint(x, 13, (char*)"#        #   #  # # # # #          #       #       #        #   #  #     # ");
+        ScreenPrint(x, 14, (char*)"#  #### #     # #  #  # #####      #       #       #####   #     # ######  ");
+        ScreenPrint(x, 15, (char*)"#     # ####### #     # #          #       #       #       ####### #   #   ");
+        ScreenPrint(x, 16, (char*)"#     # #     # #     # #          #     # #       #       #     # #    #  ");
+        ScreenPrint(x, 17, (char*)" #####  #     # #     # #######     #####  ####### ####### #     # #     # ");
+        ScreenPrint(a, 20, finalscore);
+
+       
+        if (GetAsyncKeyState(VK_RETURN))
+            exit(0);
+
+        ScreenFlipping();
+    }
 
 }
 
-void OnDrawText(char* _str, float _x, float _y, int color) {
-	SetCursorPosition(_x, _y);
-	SetTextColor(color);
-	cout << _str;
+void Gameover(Object* _Player, LONGLONG* time) {
+
+    int x = 75 - (strlen(" #####     #    #     # #######    ####### #     # ####### ######  ") / 2);
+
+    
+
+    while (true) {
+        ScreenClear();
+
+        ScreenPrint(x, 11, (char*)" #####     #    #     # #######    ####### #     # ####### ######  ");
+        ScreenPrint(x, 12, (char*)"#     #   # #   ##   ## #          #     # #     # #       #     # ");
+        ScreenPrint(x, 13, (char*)"#        #   #  # # # # #          #     # #     # #       #     # ");
+        ScreenPrint(x, 14, (char*)"#  #### #     # #  #  # #####      #     # #     # #####   ######  ");
+        ScreenPrint(x, 15, (char*)"#     # ####### #     # #          #     #  #   #  #       #   #   ");
+        ScreenPrint(x, 16, (char*)"#     # #     # #     # #          #     #   # #   #       #    #  ");
+        ScreenPrint(x, 17, (char*)" #####  #     # #     # #######    #######    #    ####### #     # ");
+
+
+        if (GetAsyncKeyState(VK_RETURN) & 0x0001) {
+            _Player->Info.Texture = (char*)"¿ô";
+            _Player->Info.life--;
+            _Player->Info.item = 0;
+            _Player->TransInfo.Position.x = 1;
+            _Player->TransInfo.Position.y = 18;
+            score = 0;
+            MapPosition = 0;
+            gameover = false;
+            *time = GetTickCount64();
+            break;
+        }
+            
+        ScreenFlipping();
+    }
+
 }
 
-void OnDrawText(int value, float _x, float _y, int color) {
-	SetCursorPosition(_x, _y);
-	SetTextColor(color);
+void init(Object* _Obj, char* texture, float px, float py, float pz) {
+    _Obj->Info.Texture = texture;
+    _Obj->Info.item = 0;
+    _Obj->Info.life = 2;
 
-	char* text = new char[4];
-	_itoa(value, text, 10);
-
-	cout << text;
+    _Obj->TransInfo.Position = Vector(px, py, pz);
+    _Obj->TransInfo.Rotation = Vector(1, 0, 0);
+    _Obj->TransInfo.Scale = Vector(strlen(_Obj->Info.Texture), 1.0f, 0);
 }
 
-void HideCursor(bool _visible) {
-	CONSOLE_CURSOR_INFO Info;
-
-	Info.bVisible = _visible;
-	Info.dwSize = 1;
-
-	SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE), &Info);
-}
-
-void Output(Object* _Obj) {
-	if (_Obj->Info.Texture == nullptr) {
-		OnDrawText((char*)"NULL", _Obj->TransInfo.Position.x, _Obj->TransInfo.Position.y);
-	}
-	else {
-		OnDrawText(_Obj->Info.Texture, _Obj->TransInfo.Position.x, _Obj->TransInfo.Position.y);
-	}
-}
 
 bool Collision(Object* _Player, Object* _block) {
-	if (_Player->TransInfo.Position.x + _Player->TransInfo.Scale.x >= _block->TransInfo.Position.x &&
-		_Player->TransInfo.Position.x <= _block->TransInfo.Position.x + _block->TransInfo.Scale.x &&
-		_Player->TransInfo.Position.y == _block->TransInfo.Position.y) {
-		return true;
-	}
-	return false;
+    if (_Player->TransInfo.Position.x + _Player->TransInfo.Scale.x > _block->TransInfo.Position.x &&
+        _Player->TransInfo.Position.x < _block->TransInfo.Position.x + _block->TransInfo.Scale.x &&
+        _Player->TransInfo.Position.y == _block->TransInfo.Position.y) {
+        return true;
+    }
+    return false;
 }
 
-Object* Createbullet(const float x, const float y, const int speed) {
-	Object* pBullet = new Object;
+Object* Createbullet(const float x, const float y) {
+    Object* pBullet = new Object;
 
-	init(pBullet, (char*)"==o", x + 2, y);
-	pBullet->Speed = speed;
+    init(pBullet, (char*)"==o", x + 2, y);
 
-	return pBullet;
+    return pBullet;
 }
 
 Object* CreateEnemy(const float x, const float y) {
-	Object* pEnemy = new Object;
+    Object* pEnemy = new Object;
 
-	init(pEnemy, (char*)"í›—", x, y);
+    init(pEnemy, (char*)"¤¡ÈÊ", x, y);
+    pEnemy->TransInfo.Rotation.x = -1;
 
-	return pEnemy;
+    return pEnemy;
 }
 
 Object* CreateEnemybullet(const float x, const float y) {
-	Object* pBullet = new Object;
+    Object* pBullet = new Object;
 
-	init(pBullet, (char*)"o==", x - 2, y);
+    init(pBullet, (char*)"o==", x - 2, y);
 
-	return pBullet;
+    return pBullet;
 }
 
-void UpdateInput(Object* _Obj) {
+void UpdateInput(Object* _Obj, char map[]) {
 
-	if (GetAsyncKeyState(VK_UP))
-		_Obj->TransInfo.Position.y -= 1;
+    LONGLONG Time = GetTickCount64();
 
-	if (GetAsyncKeyState(VK_DOWN))
-		_Obj->TransInfo.Position.y += 1;
+    if (GetAsyncKeyState(VK_UP))
+        _Obj->TransInfo.Position.y--;
 
-	if (GetAsyncKeyState(VK_LEFT))
-		_Obj->TransInfo.Position.x -= 2;
+    if (GetAsyncKeyState(VK_DOWN))
+        _Obj->TransInfo.Position.y++;
 
-	if (GetAsyncKeyState(VK_RIGHT))
-		_Obj->TransInfo.Position.x += 2;
-}
+    if (jump && jump2 && drop && GetAsyncKeyState(VK_LSHIFT) & 0x0001) {
+        jump2 = false;
+    }
 
-float GetDistance(Object* _Player, Object* _Temp) {
-	float x = _Player->TransInfo.Position.x - _Temp->TransInfo.Position.x;
-	float y = _Player->TransInfo.Position.y - _Temp->TransInfo.Position.y;
+    if (_Obj->Info.item == 0) {
+        if (GetAsyncKeyState(VK_LEFT) && _Obj->TransInfo.Position.x > 2 && drop && jump && jump2) {
+            if (map[(int)_Obj->TransInfo.Position.x + MapPosition - 1] != '1') {
+                if (_Obj->TransInfo.Position.x + _Obj->TransInfo.Scale.x > 26 || (_Obj->TransInfo.Position.x + _Obj->TransInfo.Scale.x > 2 + _Obj->TransInfo.Scale.x && MapPosition == 0)) {
+                    _Obj->TransInfo.Position.x -= 1;
+                    _Obj->TransInfo.Rotation.x = -1;
+                }
 
-	return sqrt((x * x) + (y * y));
-}
+                if (_Obj->TransInfo.Position.x == 23 && MapPosition > 0) {
+                    MapPosition -= 1;
+                    _Obj->TransInfo.Rotation.x = -1;
+                }
+            }
+        }
 
-Vector GetDistanceV(Object* _Player, Object* _Temp) {
-	float x = _Player->TransInfo.Position.x - _Temp->TransInfo.Position.x;
-	float y = _Player->TransInfo.Position.y - _Temp->TransInfo.Position.y;
-	float z = sqrt((x * x) + (y * y));
 
-	return Vector(x / z, y / z);
+        if (GetAsyncKeyState(VK_RIGHT) && _Obj->TransInfo.Position.x < 142 && drop && jump && jump2) {
+            if (map[(int)_Obj->TransInfo.Position.x + MapPosition + 3] != '1') {
+                if (_Obj->TransInfo.Position.x + _Obj->TransInfo.Scale.x < 130 || (_Obj->TransInfo.Position.x + _Obj->TransInfo.Scale.x < 146 && MapPosition >= 600)) {
+                    _Obj->TransInfo.Position.x += 1;
+                    _Obj->TransInfo.Rotation.x = 1;
+                }
+
+                if (_Obj->TransInfo.Position.x + _Obj->TransInfo.Scale.x >= 130 && MapPosition < 599) {
+                    MapPosition += 1;
+                    _Obj->TransInfo.Rotation.x = 1;
+                }
+            }
+
+        }
+    }
+
+
+    if (_Obj->Info.item == 1) {
+        if (GetAsyncKeyState(VK_LEFT) && _Obj->TransInfo.Position.x > 2 && drop && jump && jump2) {
+            if (map[(int)_Obj->TransInfo.Position.x + MapPosition - 1] != '1') {
+                if (_Obj->TransInfo.Position.x + _Obj->TransInfo.Scale.x > 26 || (_Obj->TransInfo.Position.x + _Obj->TransInfo.Scale.x > 2 + _Obj->TransInfo.Scale.x && MapPosition == 0)) {
+                    _Obj->TransInfo.Position.x -= 1;
+                    _Obj->TransInfo.Rotation.x = -1;
+                    _Obj->Info.Texture = (char*)"¤¡¿ô";
+                }
+
+                if (_Obj->TransInfo.Position.x == 23 && MapPosition > 0) {
+                    MapPosition -= 1;
+                    _Obj->TransInfo.Rotation.x = -1;
+                    _Obj->Info.Texture = (char*)"¤¡¿ô";
+
+
+                }
+            }
+        }
+
+
+        if (GetAsyncKeyState(VK_RIGHT) && _Obj->TransInfo.Position.x < 142 && drop && jump && jump2) {
+            if (map[(int)_Obj->TransInfo.Position.x + MapPosition + 3] != '1') {
+                if (_Obj->TransInfo.Position.x + _Obj->TransInfo.Scale.x < 130 || (_Obj->TransInfo.Position.x + _Obj->TransInfo.Scale.x < 146 && MapPosition >= 600)) {
+                    _Obj->TransInfo.Position.x += 1;
+                    _Obj->TransInfo.Rotation.x = 1;
+                    _Obj->Info.Texture = (char*)"¿ôr";
+
+                }
+
+                if (_Obj->TransInfo.Position.x + _Obj->TransInfo.Scale.x >= 130 && MapPosition < 599) {
+                    MapPosition += 1;
+                    _Obj->TransInfo.Rotation.x = 1;
+                    _Obj->Info.Texture = (char*)"¿ôr";
+
+
+                }
+            }
+
+        }
+    }
+    
+
+    if (jump && jump2 && drop && GetAsyncKeyState(VK_LMENU) & 0x0001) {
+        jump = false;
+
+    }
+    
+    
 }

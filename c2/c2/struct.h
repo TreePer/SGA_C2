@@ -17,18 +17,11 @@ struct TransForm {
 
 struct Info {
 	char* Texture;
-	int Color;
+	int item;
+	int life;
 };
 
 struct Object {
-	char* Name;
-	int Speed;
-	Info Info;
-	TransForm TransInfo;
-};
-
-struct TextInfo {
-	int Option;
 	Info Info;
 	TransForm TransInfo;
 };
